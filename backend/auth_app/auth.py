@@ -31,11 +31,10 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     to_encode["exp"] = expire
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-
 def get_current_user(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db),   
-) -> UserPublic:
+) -> UserDB:  # 1. Change return type hint to UserDB
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -50,15 +49,16 @@ def get_current_user(
     except JWTError:
         raise credentials_exception
 
-    # Query real database instead of fake_users_db
+    # 2. Query the user
     user = db.query(UserDB).filter(UserDB.username == token_data.username).first()
     if user is None:
         raise credentials_exception
 
-    return UserPublic(username=user.username, email=user.email, disabled=user.disabled)
+    # 3. Return the RAW database object instead of a new UserPublic instance
+    return user
 
-
-def get_current_active_user(current_user: UserPublic = Depends(get_current_user)):
+# Use UserDB (the SQLAlchemy model) instead of UserPublic (the Pydantic schema)
+def get_current_active_user(current_user: UserDB = Depends(get_current_user)):
     if current_user.disabled:
         raise HTTPException(status_code=400, detail="Inactive user")
-    return current_user
+    return current_user # This keeps the .id attribute intact

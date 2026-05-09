@@ -24,11 +24,25 @@ export const authApi = {
    * POST /auth/register
    * Body: JSON { username, email, password }
    */
-  register: async (username, email, password) => {
+  register: async (userData, avatarFile) => {
+    const formData = new FormData();
+
+    // Append all text fields from your registration form
+    // userData should be an object: { username, email, password, description, skill_level, etc. }
+    Object.keys(userData).forEach((key) => {
+      formData.append(key, userData[key]);
+    });
+
+    // Append the avatar file if the user selected one
+    if (avatarFile) {
+      formData.append("avatar", avatarFile);
+    }
+
     const res = await fetch(`${BASE_URL}/auth/register`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, email, password }),
+      // IMPORTANT: Do NOT set "Content-Type" header when using FormData.
+      // The browser will automatically set it to "multipart/form-data" with the correct boundary.
+      body: formData,
     });
     return handleResponse(res);
   },
@@ -80,4 +94,50 @@ export const authApi = {
    * Returns true if a token exists in localStorage
    */
   isLoggedIn: () => !!localStorage.getItem("token"),
+
+  // Upload profile picture
+  uploadAvatar: async (file) => {
+    const form = new FormData();
+    form.append("file", file);
+    const res = await fetch(`${BASE_URL}/users/me/avatar`, {
+      method: "POST",
+      headers: authHeaders(), // no Content-Type — browser sets it with boundary
+      body: form,
+    });
+    return handleResponse(res);
+  },
+
+  getSports: async () => {
+    const res = await fetch(`${BASE_URL}/sports`);
+    return handleResponse(res);
+  },
+
+  setUserSports: async (sportIds) => {
+    const res = await fetch(`${BASE_URL}/users/me/sports`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...authHeaders() },
+      body: JSON.stringify(sportIds),
+    });
+    return handleResponse(res);
+  },
+
+  updateProfile: async (data) => {
+    const res = await fetch(`${BASE_URL}/users/me`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...authHeaders() },
+      body: JSON.stringify(data),
+    });
+    return handleResponse(res);
+  },
+  createEvent: async (eventData) => {
+    const res = await fetch(`${BASE_URL}/events`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...authHeaders(), // This sends the Bearer token
+      },
+      body: JSON.stringify(eventData),
+    });
+    return handleResponse(res);
+  },
 };

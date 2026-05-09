@@ -8,28 +8,41 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true); // true while verifying token on mount
 
   // On app load: validate existing token
+  // Inside AuthContext.jsx
   useEffect(() => {
-    if (authApi.isLoggedIn()) {
-      authApi
-        .getMe()
-        .then(setUser)
-        .catch(() => authApi.logout())
-        .finally(() => setLoading(false));
-    } else {
+    const initAuth = async () => {
+      if (authApi.isLoggedIn()) {
+        try {
+          const fullUser = await authApi.getMe();
+          setUser(fullUser);
+        } catch (err) {
+          authApi.logout();
+        }
+      }
       setLoading(false);
-    }
+    };
+    initAuth();
   }, []);
 
   const login = async (username, password) => {
+    // 1. Get the token from the backend
     const data = await authApi.login(username, password);
+
+    // 2. Save the token to localStorage
     localStorage.setItem("token", data.access_token);
-    const me = await authApi.getMe();
-    setUser(me);
-    return me;
+
+    // 3. IMMEDIATELY fetch the full profile (including avatar_url)
+    // This uses the token we just saved
+    const fullUserProfile = await authApi.getMe();
+
+    // 4. Update the 'user' state so Dashboard and other components see it
+    setUser(fullUserProfile);
+
+    return data;
   };
 
-  const register = async (username, email, password) => {
-    return authApi.register(username, email, password);
+  const register = async (username, email, description, password) => {
+    return authApi.register(username, email, description, password);
   };
 
   const logout = () => {

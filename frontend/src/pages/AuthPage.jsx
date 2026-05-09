@@ -12,10 +12,23 @@ export default function AuthPage() {
   const from = location.state?.from?.pathname || "/dashboard";
 
   const [mode, setMode] = useState("login");
-  const [form, setForm] = useState({ username: "", email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
+
+  // 1. Full form state including all new profile fields
+  const [form, setForm] = useState({
+    username: "",
+    email: "",
+    password: "",
+    description: "",
+    skill_level: "beginner",
+    preferred_time: "anytime",
+    looking_for: "both",
+  });
+
+  // 2. Separate state for the File object (images cannot be handled as strings in form state)
+  const [avatar, setAvatar] = useState(null);
 
   // Already logged in → send straight to dashboard
   if (isLoggedIn) return <Navigate to={from} replace />;
@@ -28,11 +41,26 @@ export default function AuthPage() {
     setSuccess("");
   };
 
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setAvatar(e.target.files[0]);
+    }
+  };
+
   const switchMode = () => {
     setMode(isLogin ? "register" : "login");
     setError("");
     setSuccess("");
-    setForm({ username: "", email: "", password: "" });
+    setAvatar(null);
+    setForm({
+      username: "",
+      email: "",
+      password: "",
+      description: "",
+      skill_level: "beginner",
+      preferred_time: "anytime",
+      looking_for: "both",
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -46,13 +74,16 @@ export default function AuthPage() {
         await login(form.username, form.password);
         navigate(from, { replace: true });
       } else {
-        await register(form.username, form.email, form.password);
+        // 3. Send the full form object and the avatar file to the register function
+        await register(form, avatar);
         setSuccess("Account created! Switching to login…");
+
         setTimeout(() => {
           setMode("login");
-          setForm({ username: form.username, email: "", password: "" });
+          // Keep username for convenience, clear sensitive/extra data
+          setForm({ ...form, password: "", email: "" });
           setSuccess("");
-        }, 1200);
+        }, 1500);
       }
     } catch (err) {
       setError(err.message || "Something went wrong.");
@@ -108,18 +139,80 @@ export default function AuthPage() {
           </div>
 
           {!isLogin && (
-            <div className="field field-slide">
-              <label>Email</label>
-              <input
-                type="email"
-                name="email"
-                value={form.email}
-                onChange={handleChange}
-                placeholder="you@example.com"
-                autoComplete="email"
-                required
-              />
-            </div>
+            <>
+              <div className="field field-slide">
+                <label>Email</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={form.email}
+                  onChange={handleChange}
+                  placeholder="you@example.com"
+                  autoComplete="email"
+                  required
+                />
+              </div>
+
+              <div className="field field-slide">
+                <label>Profile Picture</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="file-input"
+                />
+              </div>
+
+              <div className="field field-slide">
+                <label>Description (Bio)</label>
+                <textarea
+                  name="description"
+                  value={form.description}
+                  onChange={handleChange}
+                  placeholder="Tell us a bit about yourself..."
+                />
+              </div>
+
+              <div className="field field-slide">
+                <label>Skill Level</label>
+                <select
+                  name="skill_level"
+                  value={form.skill_level}
+                  onChange={handleChange}
+                >
+                  <option value="beginner">Beginner</option>
+                  <option value="intermediate">Intermediate</option>
+                  <option value="advanced">Advanced</option>
+                </select>
+              </div>
+
+              <div className="field field-slide">
+                <label>Preferred Time</label>
+                <select
+                  name="preferred_time"
+                  value={form.preferred_time}
+                  onChange={handleChange}
+                >
+                  <option value="morning">Morning</option>
+                  <option value="afternoon">Afternoon</option>
+                  <option value="evening">Evening</option>
+                  <option value="anytime">Anytime</option>
+                </select>
+              </div>
+
+              <div className="field field-slide">
+                <label>Looking For</label>
+                <select
+                  name="looking_for"
+                  value={form.looking_for}
+                  onChange={handleChange}
+                >
+                  <option value="partner">Partner</option>
+                  <option value="group">Group</option>
+                  <option value="both">Both</option>
+                </select>
+              </div>
+            </>
           )}
 
           <div className="field">

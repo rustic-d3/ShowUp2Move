@@ -7,22 +7,65 @@ import "../styles/Dashboard.scss";
 export default function Dashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [items, setItems] = useState([]);
 
+  // State Management
+  const [activeTab, setActiveTab] = useState("items"); // 'items' or 'events'
+  const [items, setItems] = useState([]);
+  const [matchedEvents, setMatchedEvents] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // Form State for New Event
+  const [eventForm, setEventForm] = useState({
+    title: "",
+    sport_type: "",
+    location: "",
+    event_skill_level: user?.skill_level || "beginner",
+    event_time: user?.preferred_time || "anytime",
+  });
+
+  // Fetch Data on Tab Change
   useEffect(() => {
-    authApi
-      .getMyItems()
-      .then(setItems)
-      .catch(() => {});
-  }, []);
+    setLoading(true);
+    if (activeTab === "items") {
+      authApi
+        .getMyItems()
+        .then(setItems)
+        .catch((err) => console.error("Error fetching items:", err))
+        .finally(() => setLoading(false));
+    } else {
+      authApi
+        .getMatchedEvents()
+        .then(setMatchedEvents)
+        .catch((err) => console.error("Error fetching events:", err))
+        .finally(() => setLoading(false));
+    }
+  }, [activeTab]);
 
   const handleLogout = () => {
     logout();
     navigate("/auth", { replace: true });
   };
 
+  const handleCreateEvent = async (e) => {
+    e.preventDefault();
+    try {
+      await authApi.createEvent(eventForm);
+      setShowModal(false);
+      // Refresh events if on the events tab
+      if (activeTab === "events") {
+        const updated = await authApi.getMatchedEvents();
+        setMatchedEvents(updated);
+      }
+      alert("Event created successfully!");
+    } catch (err) {
+      alert("Error: " + err.message);
+    }
+  };
+
   return (
     <div className="dash-root">
+      {/* Background Decor */}
       <div className="dash-bg">
         <span className="dash-blob dash-blob-1" />
         <span className="dash-blob dash-blob-2" />
@@ -30,34 +73,196 @@ export default function Dashboard() {
 
       <header className="dash-header">
         <span className="dash-brand">S2M</span>
-        <button className="dash-logout" onClick={handleLogout}>
-          Logout
-        </button>
+        <div className="dash-nav-profile">
+          {user?.avatar_url && (
+            <img
+              src={user.avatar_url}
+              alt="nav-avatar"
+              className="dash-nav-img"
+            />
+          )}
+          <button className="dash-logout" onClick={handleLogout}>
+            Logout
+          </button>
+        </div>
       </header>
 
       <main className="dash-main">
-        <div className="dash-greeting">
-          <p className="dash-label">Welcome back</p>
-          <h1 className="dash-username">{user?.username}</h1>
-          <p className="dash-email">{user?.email}</p>
-        </div>
-
-        <section className="dash-section">
-          <h2 className="dash-section-title">My Items</h2>
-          <div className="dash-items">
-            {items.length === 0 ? (
-              <p className="dash-empty">No items yet.</p>
+        {/* Profile Info Card */}
+        <div className="dash-profile-section">
+          <div className="dash-avatar-wrapper">
+            {user?.avatar_url ? (
+              <img
+                src={user.avatar_url}
+                alt="Profile"
+                className="dash-avatar-img"
+              />
             ) : (
-              items.map((item) => (
-                <div className="dash-item" key={item.item_id}>
-                  <span className="dash-item-name">{item.name}</span>
-                  <span className="dash-item-id">#{item.item_id}</span>
-                </div>
-              ))
+              <div className="dash-avatar-placeholder">
+                {user?.username?.charAt(0).toUpperCase()}
+              </div>
             )}
           </div>
+          <div className="dash-greeting">
+            <p className="dash-label">Welcome back</p>
+            <h1 className="dash-username">{user?.username}</h1>
+            <p className="dash-email">{user?.email}</p>
+            {user?.description && (
+              <p className="dash-bio">{user?.description}</p>
+            )}
+          </div>
+        </div>
+
+        {/* Tab Controls */}
+        <div className="dash-controls">
+          <div className="dash-tabs">
+            <button
+              className={`dash-tab ${activeTab === "items" ? "active" : ""}`}
+              onClick={() => setActiveTab("items")}
+            >
+              My Items
+            </button>
+            <button
+              className={`dash-tab ${activeTab === "events" ? "active" : ""}`}
+              onClick={() => setActiveTab("events")}
+            >
+              Find Events
+            </button>
+          </div>
+
+          <button
+            className="create-event-btn"
+            onClick={() => setShowModal(true)}
+          >
+            <span>+</span> Create Event
+          </button>
+        </div>
+
+        {/* Content Display */}
+        <section className="dash-content">
+          {loading ? (
+            <div className="dash-loader">Loading...</div>
+          ) : activeTab === "items" ? (
+            <div className="dash-items-list">
+              {items.length === 0 ? (
+                <p className="dash-empty">No personal items found.</p>
+              ) : (
+                items.map((item) => (
+                  <div className="dash-item-card" key={item.item_id}>
+                    <span className="item-name">{item.name}</span>
+                    <span className="item-id">ID: {item.item_id}</span>
+                  </div>
+                ))
+              )}
+            </div>
+          ) : (
+            <div className="dash-events-grid">
+              {matchedEvents.length === 0 ? (
+                <p className="dash-empty">
+                  No matches found for your schedule/skill.
+                </p>
+              ) : (
+                matchedEvents.map((event) => (
+                  <div className="event-card" key={event.id}>
+                    <div className="event-header">
+                      <span className="event-tag">{event.sport_type}</span>
+                      <span className="event-skill">
+                        {event.event_skill_level}
+                      </span>
+                    </div>
+                    <h3>{event.title}</h3>
+                    <p>📍 {event.location}</p>
+                    <p>⏰ {event.event_time}</p>
+                    <button className="join-btn">Join Match</button>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
         </section>
       </main>
+
+      {/* Create Event Modal */}
+      {showModal && (
+        <div className="modal-overlay">
+          <div className="modal-card">
+            <div className="modal-header">
+              <h2>New Sport Match</h2>
+              <button onClick={() => setShowModal(false)}>&times;</button>
+            </div>
+            <form onSubmit={handleCreateEvent}>
+              <div className="form-group">
+                <label>Match Title</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Morning Tennis"
+                  required
+                  onChange={(e) =>
+                    setEventForm({ ...eventForm, title: e.target.value })
+                  }
+                />
+              </div>
+              <div className="form-group">
+                <label>Sport</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Football"
+                  required
+                  onChange={(e) =>
+                    setEventForm({ ...eventForm, sport_type: e.target.value })
+                  }
+                />
+              </div>
+              <div className="form-group">
+                <label>Location</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Central Park"
+                  required
+                  onChange={(e) =>
+                    setEventForm({ ...eventForm, location: e.target.value })
+                  }
+                />
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Skill Level</label>
+                  <select
+                    value={eventForm.event_skill_level}
+                    onChange={(e) =>
+                      setEventForm({
+                        ...eventForm,
+                        event_skill_level: e.target.value,
+                      })
+                    }
+                  >
+                    <option value="beginner">Beginner</option>
+                    <option value="intermediate">Intermediate</option>
+                    <option value="advanced">Advanced</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Time Preference</label>
+                  <select
+                    value={eventForm.event_time}
+                    onChange={(e) =>
+                      setEventForm({ ...eventForm, event_time: e.target.value })
+                    }
+                  >
+                    <option value="morning">Morning</option>
+                    <option value="afternoon">Afternoon</option>
+                    <option value="evening">Evening</option>
+                    <option value="anytime">Anytime</option>
+                  </select>
+                </div>
+              </div>
+              <button type="submit" className="submit-event-btn">
+                Post Event
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
