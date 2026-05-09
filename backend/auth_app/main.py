@@ -124,6 +124,13 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     return {"access_token": access_token, "token_type": "bearer"}
 
 
+@app.get("/events/mine", response_model=List[EventPublic])
+def get_my_events(
+    current_user: UserDB = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    return db.query(EventDB).filter(EventDB.creator_id == current_user.id).all()
+
 @app.get("/users/me", response_model=UserPublic) # Must be UserPublic!
 def read_users_me(current_user: UserDB = Depends(get_current_active_user)):
     return current_user

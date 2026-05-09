@@ -373,3 +373,56 @@ $glass-border: rgba(255, 255, 255, 0.1);
     }
   }
 }
+.event-card--mine {
+  border-color: rgba(#b6f500, 0.2);
+  background: rgba(#b6f500, 0.03);
+}
+
+.mine-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(#b6f500, 0.5);
+}
+
+.dash-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.dash-badge {
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(#b6f500, 0.25);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(#fffadc, 0.55);
+}
+
+.dash-empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.dash-empty-icon {
+  font-size: 3rem;
+  margin: 0;
+}
+.dash-empty-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: rgba(#fffadc, 0.6);
+  margin: 0;
+}
+.dash-empty-sub {
+  font-size: 0.84rem;
+  color: rgba(#fffadc, 0.3);
+  margin: 0 0 16px;
+}

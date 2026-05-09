@@ -140,4 +140,17 @@ export const authApi = {
     });
     return handleResponse(res);
   },
+  getMyEvents: async () => {
+    const res = await fetch(`${BASE_URL}/events/mine`, {
+      headers: authHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  getMatchedEvents: async () => {
+    const res = await fetch(`${BASE_URL}/events/matches`, {
+      headers: authHeaders(),
+    });
+    return handleResponse(res);
+  },
 };
