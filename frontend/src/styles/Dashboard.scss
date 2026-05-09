@@ -1,0 +1,209 @@
+$cream: #fffadc;
+$lime: #b6f500;
+$green: #a4dd00;
+$deep-green: #98cd00;
+$dark: #1a1f0e;
+
+.dash-root {
+  min-height: 100vh;
+  background: $dark;
+  font-family: "DM Sans", "Helvetica Neue", sans-serif;
+  color: $cream;
+  position: relative;
+  overflow: hidden;
+}
+
+// ── Background blobs ───────────────────────────────────────────────────────
+.dash-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.dash-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  opacity: 0.1;
+
+  &-1 {
+    width: 600px;
+    height: 600px;
+    background: $lime;
+    top: -200px;
+    right: -150px;
+    animation: drift 16s ease-in-out infinite alternate;
+  }
+
+  &-2 {
+    width: 400px;
+    height: 400px;
+    background: $deep-green;
+    bottom: -100px;
+    left: -100px;
+    animation: drift 12s ease-in-out infinite alternate-reverse;
+  }
+}
+
+@keyframes drift {
+  from {
+    transform: translate(0, 0);
+  }
+  to {
+    transform: translate(20px, 30px);
+  }
+}
+
+// ── Header ─────────────────────────────────────────────────────────────────
+.dash-header {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 40px;
+  border-bottom: 1px solid rgba($lime, 0.08);
+  backdrop-filter: blur(12px);
+
+  @media (max-width: 600px) {
+    padding: 16px 20px;
+  }
+}
+
+.dash-brand {
+  font-family: "Bebas Neue", "Impact", sans-serif;
+  font-size: 1.6rem;
+  letter-spacing: 0.12em;
+  color: $lime;
+  text-shadow: 0 0 30px rgba($lime, 0.35);
+}
+
+.dash-logout {
+  padding: 8px 20px;
+  background: transparent;
+  border: 1px solid rgba($lime, 0.3);
+  border-radius: 8px;
+  color: rgba($cream, 0.6);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    border-color: $lime;
+    color: $lime;
+    box-shadow: 0 0 16px rgba($lime, 0.15);
+  }
+}
+
+// ── Main content ───────────────────────────────────────────────────────────
+.dash-main {
+  position: relative;
+  z-index: 1;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 60px 40px;
+  animation: fade-up 0.5s ease both;
+
+  @media (max-width: 600px) {
+    padding: 40px 20px;
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// ── Greeting ───────────────────────────────────────────────────────────────
+.dash-greeting {
+  margin-bottom: 56px;
+}
+
+.dash-label {
+  font-size: 0.75rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba($cream, 0.35);
+  margin: 0 0 8px;
+}
+
+.dash-username {
+  font-family: "Bebas Neue", "Impact", sans-serif;
+  font-size: clamp(2.8rem, 6vw, 4.5rem);
+  letter-spacing: 0.06em;
+  color: $lime;
+  margin: 0 0 6px;
+  line-height: 1;
+  text-shadow: 0 0 60px rgba($lime, 0.25);
+}
+
+.dash-email {
+  font-size: 0.88rem;
+  color: rgba($cream, 0.4);
+  margin: 0;
+}
+
+// ── Section ────────────────────────────────────────────────────────────────
+.dash-section-title {
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba($cream, 0.35);
+  margin: 0 0 16px;
+  font-weight: 600;
+}
+
+.dash-items {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dash-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: rgba($cream, 0.03);
+  border: 1px solid rgba($lime, 0.1);
+  border-radius: 12px;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
+
+  &:hover {
+    background: rgba($lime, 0.04);
+    border-color: rgba($lime, 0.2);
+  }
+}
+
+.dash-item-name {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: $cream;
+}
+
+.dash-item-id {
+  font-size: 0.78rem;
+  color: rgba($lime, 0.5);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+.dash-empty {
+  color: rgba($cream, 0.25);
+  font-size: 0.88rem;
+  font-style: italic;
+  margin: 0;
+}

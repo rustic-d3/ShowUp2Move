@@ -8,20 +8,17 @@ from sqlalchemy.orm import Session
 
 from models import TokenData, UserPublic
 from security import verify_password
+from database import get_db, UserDB  # ← import real DB
 import os
 
-# ── Config ────────────────────────────────────────────────────────────────────
-SECRET_KEY = os.environ['SECRET_KEY']
+SECRET_KEY = os.environ["SECRET_KEY"]
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
-
 def authenticate_user(db: Session, username: str, password: str):
-    from database import UserDB
     user = db.query(UserDB).filter(UserDB.username == username).first()
     if not user or not verify_password(password, user.hashed_password):
         return False
@@ -35,9 +32,10 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 
-# ── Dependencies ──────────────────────────────────────────────────────────────
-
-def get_current_user(token: str = Depends(oauth2_scheme)) -> UserPublic:
+def get_current_user(
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),   
+) -> UserPublic:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -52,11 +50,11 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> UserPublic:
     except JWTError:
         raise credentials_exception
 
-    # Import here to avoid circular imports
-    from database import fake_users_db
-    user = fake_users_db.get(token_data.username)
+    # Query real database instead of fake_users_db
+    user = db.query(UserDB).filter(UserDB.username == token_data.username).first()
     if user is None:
         raise credentials_exception
+
     return UserPublic(username=user.username, email=user.email, disabled=user.disabled)
 
 
